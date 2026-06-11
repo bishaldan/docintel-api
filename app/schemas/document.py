@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.enums import DocumentStatus, ExtractionType, ValidationSeverity
+from app.models.enums import DocumentStatus, DocumentType, ExportFormat, ExtractionType, JobStatus, ValidationSeverity
 
 
 class DocumentRead(BaseModel):
@@ -10,6 +10,7 @@ class DocumentRead(BaseModel):
     filename: str
     content_type: str
     status: DocumentStatus
+    document_type: DocumentType
     page_count: int
     error_message: str | None
     created_at: datetime
@@ -44,3 +45,31 @@ class DocumentDetail(DocumentRead):
     extractions: list[ExtractionRead]
     validations: list[ValidationFindingRead]
 
+
+class ProcessingJobRead(BaseModel):
+    id: int
+    document_id: int
+    status: JobStatus
+    error_message: str | None
+    created_at: datetime
+    started_at: datetime | None
+    completed_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class ExportJobCreate(BaseModel):
+    format: ExportFormat
+
+
+class ExportJobRead(BaseModel):
+    id: int
+    document_id: int
+    format: ExportFormat
+    status: JobStatus
+    filename: str | None
+    error_message: str | None
+    created_at: datetime
+    completed_at: datetime | None
+
+    model_config = {"from_attributes": True}

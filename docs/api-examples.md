@@ -17,6 +17,12 @@ curl -sS -X POST "$BASE_URL/documents" \
 curl -sS -X POST "$BASE_URL/documents/1/process"
 ```
 
+## Check Processing Jobs
+
+```bash
+curl -sS "$BASE_URL/documents/1/jobs"
+```
+
 ## Read Extractions
 
 ```bash
@@ -35,3 +41,16 @@ curl -sS "$BASE_URL/documents/1/exports/json"
 curl -sS "$BASE_URL/documents/1/exports/csv"
 ```
 
+## Create Export Job
+
+```bash
+curl -sS -X POST "$BASE_URL/documents/1/export-jobs" \
+  -H "Content-Type: application/json" \
+  -d '{"format":"csv"}'
+```
+
+## Download Export Job
+
+```bash
+curl -sS "$BASE_URL/documents/1/export-jobs/1/download"
+```

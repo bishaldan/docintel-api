@@ -20,10 +20,14 @@ This project is designed as a senior Python backend portfolio project. It demons
 
 - Document upload API
 - Processing job lifecycle: pending, processing, completed, failed
+- Processing job records with status tracking
+- PDF text extraction support via `pypdf`
+- Document type detection for invoices, receipts, forms, reports, and unknown documents
 - Structure extraction for headings, paragraphs, key-value fields, and pipe-style tables
-- Validation findings for missing fields and low-confidence extraction
+- Type-specific validation findings for missing fields and low-confidence extraction
 - JSON export endpoint
 - CSV export endpoint
+- Export job records with status and download endpoint
 - Request ID middleware
 - Celery task module for background processing
 - Test suite covering upload, processing, validation, and exports
@@ -51,15 +55,19 @@ POST /api/v1/documents
 GET  /api/v1/documents
 GET  /api/v1/documents/{document_id}
 POST /api/v1/documents/{document_id}/process
+GET  /api/v1/documents/{document_id}/jobs
+GET  /api/v1/documents/{document_id}/jobs/{job_id}
 GET  /api/v1/documents/{document_id}/extractions
 GET  /api/v1/documents/{document_id}/validations
 GET  /api/v1/documents/{document_id}/exports/json
 GET  /api/v1/documents/{document_id}/exports/csv
+POST /api/v1/documents/{document_id}/export-jobs
+GET  /api/v1/documents/{document_id}/export-jobs/{export_id}
+GET  /api/v1/documents/{document_id}/export-jobs/{export_id}/download
 ```
 
 ## Portfolio Positioning
 
 CV summary:
 
-> Built a document intelligence API with FastAPI, SQLAlchemy, Alembic, document upload workflows, structured extraction, validation findings, JSON/CSV exports, Celery-ready background processing, Docker infrastructure, request tracing, and automated tests.
-
+> Built a document intelligence API with FastAPI, PDF text extraction, OCR-ready service boundaries, document type detection, structured field/table extraction, validation rules, JSON/CSV export jobs, SQLAlchemy/Alembic persistence, Celery-ready background processing, Docker infrastructure, request tracing, and automated tests.

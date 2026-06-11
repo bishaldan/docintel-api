@@ -24,8 +24,12 @@ def test_upload_process_and_extract_document(client):
     document_id = upload_response.json()["id"]
 
     process_response = client.post(f"/api/v1/documents/{document_id}/process")
-    assert process_response.status_code == 200
+    assert process_response.status_code == 201
     assert process_response.json()["status"] == "completed"
+
+    detail_response = client.get(f"/api/v1/documents/{document_id}")
+    assert detail_response.status_code == 200
+    assert detail_response.json()["document_type"] == "invoice"
 
     extractions_response = client.get(f"/api/v1/documents/{document_id}/extractions")
     assert extractions_response.status_code == 200
@@ -55,6 +59,33 @@ def test_exports_require_processed_document(client):
     assert "Acme School" in csv_export.text
 
 
+def test_processing_jobs_and_export_jobs(client):
+    upload_response = upload_sample(client)
+    document_id = upload_response.json()["id"]
+
+    process_response = client.post(f"/api/v1/documents/{document_id}/process")
+    assert process_response.status_code == 201
+    job_id = process_response.json()["id"]
+
+    job_response = client.get(f"/api/v1/documents/{document_id}/jobs/{job_id}")
+    assert job_response.status_code == 200
+    assert job_response.json()["status"] == "completed"
+
+    export_response = client.post(
+        f"/api/v1/documents/{document_id}/export-jobs",
+        json={"format": "csv"},
+    )
+    assert export_response.status_code == 201
+    assert export_response.json()["status"] == "completed"
+    export_id = export_response.json()["id"]
+
+    download_response = client.get(
+        f"/api/v1/documents/{document_id}/export-jobs/{export_id}/download"
+    )
+    assert download_response.status_code == 200
+    assert "Acme School" in download_response.text
+
+
 def test_validation_flags_missing_required_fields(client):
     upload_response = client.post(
         "/api/v1/documents",
@@ -69,3 +100,18 @@ def test_validation_flags_missing_required_fields(client):
     codes = {item["code"] for item in response.json()}
     assert "missing_required_field" in codes
 
+
+def test_receipt_type_uses_receipt_validation_rules(client):
+    receipt = b"RECEIPT\nMerchant: Corner Store\nDate: 2026-06-11\nTotal: 20.00"
+    upload_response = client.post(
+        "/api/v1/documents",
+        files={"file": ("receipt.txt", receipt, "text/plain")},
+    )
+    document_id = upload_response.json()["id"]
+
+    client.post(f"/api/v1/documents/{document_id}/process")
+    detail_response = client.get(f"/api/v1/documents/{document_id}")
+    validations_response = client.get(f"/api/v1/documents/{document_id}/validations")
+
+    assert detail_response.json()["document_type"] == "receipt"
+    assert validations_response.json() == []

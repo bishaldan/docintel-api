@@ -8,6 +8,7 @@ dependencies = [
     "celery>=5.4.0",
     "fastapi>=0.112.0",
     "pydantic-settings>=2.4.0",
+    "pypdf>=5.0.0",
     "python-multipart>=0.0.9",
     "redis>=5.0.8",
     "sqlalchemy>=2.0.32",
@@ -31,4 +32,3 @@ target-version = "py312"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-
