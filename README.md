@@ -15,6 +15,10 @@ This project is designed as a senior Python backend portfolio project. It demons
 - Docker Compose
 - Pytest
 - GitHub Actions
+- Structured request logging
+- Request ID middleware
+- Consistent error responses
+- Lightweight rate limiting
 
 ## Features
 
@@ -35,7 +39,33 @@ This project is designed as a senior Python backend portfolio project. It demons
 - Export job records with status and download endpoint
 - Request ID middleware
 - Celery task module for background processing
+- Consistent validation/error response format
+- Structured request logs with request IDs
+- In-memory rate limiter for upload/process/export endpoints
+- Demo seed script with invoice, receipt, form, and report samples
 - Test suite covering upload, processing, validation, and exports
+
+## Architecture
+
+```text
+Client / Swagger UI
+        |
+        v
+FastAPI application
+        |
+        +-- Request IDs, structured logs, rate limiting
+        +-- Upload and document lifecycle APIs
+        +-- Processing jobs and export jobs
+        +-- PDF reader service
+        +-- OCR provider interface
+        +-- Extraction, normalization, validation
+        |
+        v
+SQLAlchemy models + Alembic migrations
+        |
+        +-- SQLite locally / database-ready persistence
+        +-- Redis-backed Celery worker modules
+```
 
 ## Local Setup
 
@@ -44,6 +74,12 @@ cp .env.example .env
 pip install -e ".[dev]"
 pytest
 uvicorn app.main:app --reload --port 8001
+```
+
+Seed demo documents:
+
+```bash
+python scripts/seed_demo.py
 ```
 
 API docs:
@@ -71,8 +107,21 @@ GET  /api/v1/documents/{document_id}/export-jobs/{export_id}
 GET  /api/v1/documents/{document_id}/export-jobs/{export_id}/download
 ```
 
+## Error Shape
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "request_id": "ec07726d-d282-4b92-b970-f072d05c02a8",
+    "details": []
+  }
+}
+```
+
 ## Portfolio Positioning
 
 CV summary:
 
-> Built a document intelligence API with FastAPI, PDF text extraction, OCR-ready service boundaries, document type detection, structured field/table extraction, validation rules, JSON/CSV export jobs, SQLAlchemy/Alembic persistence, Celery-ready background processing, Docker infrastructure, request tracing, and automated tests.
+> Built a document intelligence API with FastAPI, PDF text extraction, OCR-ready image processing architecture, document type detection, field/table extraction, field normalization, confidence scoring, validation rules, JSON/CSV export jobs, SQLAlchemy/Alembic persistence, Celery-ready background processing, structured logging, rate limiting, Docker infrastructure, and automated tests.

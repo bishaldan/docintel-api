@@ -13,7 +13,15 @@ async def request_id_middleware(
     request.state.request_id = request_id
     start = time.perf_counter()
     response = await call_next(request)
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
     response.headers["X-Request-ID"] = request_id
-    response.headers["X-Response-Time-MS"] = str(round((time.perf_counter() - start) * 1000, 2))
+    response.headers["X-Response-Time-MS"] = str(duration_ms)
+    request.app.state.logger.info(
+        "request method=%s path=%s status=%s duration_ms=%s",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+        extra={"request_id": request_id},
+    )
     return response
-
