@@ -22,8 +22,13 @@ This project is designed as a senior Python backend portfolio project. It demons
 - Processing job lifecycle: pending, processing, completed, failed
 - Processing job records with status tracking
 - PDF text extraction support via `pypdf`
+- Image upload support through an OCR provider interface
+- Mock OCR provider for local development and tests
 - Document type detection for invoices, receipts, forms, reports, and unknown documents
 - Structure extraction for headings, paragraphs, key-value fields, and pipe-style tables
+- Field normalization for common aliases such as `Grand Total`, `Amount Due`, and `Customer Name`
+- Date and currency normalization
+- Document-level and field-level confidence scores
 - Type-specific validation findings for missing fields and low-confidence extraction
 - JSON export endpoint
 - CSV export endpoint

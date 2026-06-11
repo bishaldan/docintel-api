@@ -1,7 +1,7 @@
 SAMPLE_DOCUMENT = """# INVOICE
 Name: Acme School
 Date: 2026-06-11
-Total: 1250.50
+Grand Total: $1,250.50
 
 This document describes classroom technology purchases.
 
@@ -30,11 +30,14 @@ def test_upload_process_and_extract_document(client):
     detail_response = client.get(f"/api/v1/documents/{document_id}")
     assert detail_response.status_code == 200
     assert detail_response.json()["document_type"] == "invoice"
+    assert detail_response.json()["confidence"] > 0.8
 
     extractions_response = client.get(f"/api/v1/documents/{document_id}/extractions")
     assert extractions_response.status_code == 200
     extraction_types = {item["type"] for item in extractions_response.json()}
     assert {"heading", "field", "paragraph", "table"}.issubset(extraction_types)
+    normalized_fields = {item["normalized_label"]: item["value"] for item in extractions_response.json()}
+    assert normalized_fields["total"] == "1250.50"
 
     validations_response = client.get(f"/api/v1/documents/{document_id}/validations")
     assert validations_response.status_code == 200
@@ -99,6 +102,51 @@ def test_validation_flags_missing_required_fields(client):
     assert response.status_code == 200
     codes = {item["code"] for item in response.json()}
     assert "missing_required_field" in codes
+
+
+def test_image_upload_uses_ocr_sidecar_and_low_confidence_warning(client, tmp_path):
+    image_response = client.post(
+        "/api/v1/documents",
+        files={"file": ("scan.png", b"fake-image-bytes", "image/png")},
+    )
+    document_id = image_response.json()["id"]
+
+    detail_response = client.get(f"/api/v1/documents/{document_id}")
+    # The upload filename is stored under a generated path; create a sidecar OCR text file beside it.
+    storage_path = tmp_path / "uploads"
+    stored_files = list(storage_path.glob("*.png"))
+    assert stored_files
+    stored_files[0].with_suffix(stored_files[0].suffix + ".txt").write_text(
+        "INVOICE\nCustomer Name: Image Buyer\nInvoice Date: 06/11/2026\nAmount Due: $99.95",
+        encoding="utf-8",
+    )
+    assert detail_response.status_code == 200
+
+    process_response = client.post(f"/api/v1/documents/{document_id}/process")
+    assert process_response.status_code == 201
+    processed_detail = client.get(f"/api/v1/documents/{document_id}").json()
+    assert processed_detail["document_type"] == "invoice"
+    assert processed_detail["confidence"] > 0.7
+
+    extractions = client.get(f"/api/v1/documents/{document_id}/extractions").json()
+    normalized_fields = {item["normalized_label"]: item["value"] for item in extractions}
+    assert normalized_fields["name"] == "Image Buyer"
+    assert normalized_fields["date"] == "2026-06-11"
+    assert normalized_fields["total"] == "99.95"
+
+
+def test_image_without_sidecar_gets_low_confidence_warning(client):
+    image_response = client.post(
+        "/api/v1/documents",
+        files={"file": ("scan.png", b"fake-image-bytes", "image/png")},
+    )
+    document_id = image_response.json()["id"]
+
+    client.post(f"/api/v1/documents/{document_id}/process")
+    validations = client.get(f"/api/v1/documents/{document_id}/validations").json()
+
+    codes = {item["code"] for item in validations}
+    assert "low_confidence" in codes
 
 
 def test_receipt_type_uses_receipt_validation_rules(client):

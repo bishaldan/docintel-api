@@ -11,6 +11,13 @@ curl -sS -X POST "$BASE_URL/documents" \
   -F "file=@sample-invoice.txt"
 ```
 
+Images can be uploaded through the same endpoint. The default local OCR provider is a mock provider, so production OCR engines can be added behind the provider interface.
+
+```bash
+curl -sS -X POST "$BASE_URL/documents" \
+  -F "file=@scanned-invoice.png"
+```
+
 ## Process
 
 ```bash

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./docintel.db"
     redis_url: str = "redis://localhost:6379/0"
     upload_dir: str = "storage/uploads"
+    ocr_provider: str = "mock"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
@@ -19,4 +20,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

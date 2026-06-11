@@ -12,6 +12,7 @@ class DocumentRead(BaseModel):
     status: DocumentStatus
     document_type: DocumentType
     page_count: int
+    confidence: float
     error_message: str | None
     created_at: datetime
     processed_at: datetime | None
@@ -24,6 +25,7 @@ class ExtractionRead(BaseModel):
     document_id: int
     type: ExtractionType
     label: str | None
+    normalized_label: str | None
     value: str
     page_number: int
     confidence: float
